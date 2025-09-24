@@ -52,8 +52,8 @@ class Sudoku:
                 contains = [False]*(self.length+1)
 
                 for k in range(self.size):
-                    for l in range(self.size):
-                        num = self.board[(i*self.size)+k][(j*self.size)+l]
+                    for m in range(self.size):
+                        num = self.board[(i*self.size)+k][(j*self.size)+m]
                         if contains[num]:
                             return False
                         contains[num]=True
@@ -85,9 +85,43 @@ class Sudoku:
                 contains = [False]*(self.length+1)
 
                 for k in range(self.size):
-                    for l in range(self.size):
-                        num = self.board[(i*self.size)+k][(j*self.size)+l]
+                    for m in range(self.size):
+                        num = self.board[(i*self.size)+k][(j*self.size)+m]
                         if num!=0 and contains[num]:
                             return False
                         contains[num]=True
         return True
+    
+    def numErrors(self): #checks number of errors (matching digits in row) in board
+        errors = 0
+        for i in range(self.length): #checks rows
+            contains = [False]*(self.length+1)
+            
+            for j in range(self.length):
+                num = self.board[i][j]
+                if num!=0 and contains[num]:
+                    errors+=1
+                contains[num]=True
+                
+
+        for i in range(self.length): #checks columns
+            contains = [False]*(self.length+1)
+
+            for j in range(self.length):
+                num = self.board[j][i]
+                if num!=0 and contains[num]:
+                    errors+=1
+                contains[num]=True
+        
+
+        for i in range(self.size): #checks boxes
+            for j in range(self.size):
+                contains = [False]*(self.length+1)
+
+                for k in range(self.size):
+                    for m in range(self.size):
+                        num = self.board[(i*self.size)+k][(j*self.size)+m]
+                        if num!=0 and contains[num]:
+                            errors+=1
+                        contains[num]=True
+        return errors
