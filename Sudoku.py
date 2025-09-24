@@ -95,13 +95,15 @@ class Sudoku:
                         contains[num]=True
         return True
     
-    def numErrors(self): #checks number of errors (matching digits in row) in board
+    def numErrors(self, grid=None): #checks number of errors (matching digits in row) in board
         errors = 0
+        if grid==None:
+            grid = self.board
         for i in range(self.length): #checks rows
             contains = [False]*(self.length+1)
             
             for j in range(self.length):
-                num = self.board[i][j]
+                num = grid[i][j]
                 if num!=0 and contains[num]:
                     errors+=1
                 contains[num]=True
@@ -111,7 +113,7 @@ class Sudoku:
             contains = [False]*(self.length+1)
 
             for j in range(self.length):
-                num = self.board[j][i]
+                num = grid[j][i]
                 if num!=0 and contains[num]:
                     errors+=1
                 contains[num]=True
@@ -123,7 +125,7 @@ class Sudoku:
 
                 for k in range(self.size):
                     for m in range(self.size):
-                        num = self.board[(i*self.size)+k][(j*self.size)+m]
+                        num = grid[(i*self.size)+k][(j*self.size)+m]
                         if num!=0 and contains[num]:
                             errors+=1
                         contains[num]=True
