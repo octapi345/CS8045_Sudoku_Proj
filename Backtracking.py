@@ -1,12 +1,12 @@
 import Sudoku
 
-def genStaticMatrix(puzzle: Sudoku):
-    output = [[0]*puzzle.length for _ in range(puzzle.length)]
-    for row in range(puzzle.length):
-        for col in range(puzzle.length):
-            if puzzle.board[row][col]!=0:
-                output[row][col]=True
-    return output
+# def genStaticMatrix(puzzle: Sudoku):
+#     output = [[0]*puzzle.length for _ in range(puzzle.length)]
+#     for row in range(puzzle.length):
+#         for col in range(puzzle.length):
+#             if puzzle.board[row][col]!=0:
+#                 output[row][col]=True
+#     return output
 
 def nextCell(puzzle: Sudoku, cell):
     if cell[1] < (puzzle.length-1):
@@ -25,7 +25,7 @@ def prevCell(puzzle: Sudoku, cell):
     return cell
 
 def algorithm(puzzle: Sudoku):
-    isStatic = genStaticMatrix(puzzle)
+    isStatic = puzzle.fixed
     return run(puzzle, isStatic, [0, 0], False)
 
 def run(puzzle: Sudoku, isStatic, cell: list, inReverse: bool):

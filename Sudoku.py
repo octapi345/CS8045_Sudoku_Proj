@@ -3,6 +3,7 @@ class Sudoku:
         self.size = size #size 3 means 9x9
         self.length = size*size
         self.board = [[0]*self.length for _ in range(self.length)] 
+        self.fixed = [[False]*self.length for _ in range(self.length)]
     
     def fillFromString(self, digitString): #only works with size 3 or less. done with digits. zero is empty
         digitArr = [int(char) for char in digitString] 
@@ -10,6 +11,8 @@ class Sudoku:
         for i in range(self.length):
             for j in range(self.length):
                 self.board[i][j]=digitArr[pointer]
+                if self.board[i][j]!=0:
+                    self.fixed[i][j]=True
                 pointer += 1
 
     def toString(self):
