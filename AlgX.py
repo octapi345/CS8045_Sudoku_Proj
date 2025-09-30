@@ -7,14 +7,18 @@ class Root:
     def __init__(self):
         self.left=None
         self.right=None
+        self.name="root"
     def getColHead(self, pos):
         target=self
         for i in range(pos):
             target=target.right
+        return target
     def getColByName(self, name):
         target=self.right
         while(not target is self and target.name != name):
-            target=target.right
+            #print(target.name)
+            target=target.right    
+        return target
 
 class ColumnHeader:
     def __init__(self, name, root):
@@ -63,6 +67,7 @@ class Node:
         self.up=prevNode
         prevNode.down=self
         self.down=colHead
+        colHead.up=self
         self.colHead=colHead
         self.rowHead=rowHead
 
@@ -78,6 +83,7 @@ class rowHeader:
 #generates initial 2D linked list
 def genLinkList(puzzle: Sudoku.Sudoku):
     root = Root()
+    prev=root
     for i in range(4): #generate constraint sets
         nameFormat = ""
         match i:
@@ -89,7 +95,6 @@ def genLinkList(puzzle: Sudoku.Sudoku):
                 nameFormat="col {} contains digit {}"
             case 3:
                 nameFormat="box {} contains digit {}"
-        prev=root
         for j in range(1, puzzle.length+1):
             for k in range(1, puzzle.length+1):
                 colH=ColumnHeader(nameFormat.format(str(j), str(k)), root)
@@ -98,6 +103,7 @@ def genLinkList(puzzle: Sudoku.Sudoku):
                 colH.right=root
                 if i==3 and j==puzzle.length and k==puzzle.length:
                     root.left=colH
+                prev=colH
 
     for row in range(1, puzzle.length+1): #generate possibilities
             for col in range(1, puzzle.length+1):
@@ -136,15 +142,28 @@ def run(puzzle: Sudoku.Sudoku):
         for col in range(puzzle.length):
             if initialBoard[row][col]!=0:
                 num = initialBoard[row][col]
-                colPos = (math.floor((row-1)/puzzle.length)*puzzle.length + math.ceil(col/puzzle.length))
-                c
+                colName="row {}, col {} contains a number".format(str(row+1), str(col+1))
+                #print(colName)
+                colHead=root.getColByName(colName)
+                #print(colHead.name)
+                colHead.cover()
 
-                colPos = (math.floor((row-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
-                
+                colName = "row {} contains digit {}".format(str(row+1), str(num))
+                colHead=root.getColByName(colName)
+                colHead.cover()
 
-                colPos = (math.floor((col-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
-                
-                box = (math.floor((row-1)/puzzle.size)*puzzle.size + math.ceil(col/puzzle.size))
-                colPos = (math.floor((box-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
-                
+                colName = "col {} contains digit {}".format(str(col+1), str(num))
+                colHead=root.getColByName(colName)
+                colHead.cover()
+
+                box = (math.floor((row)/puzzle.size)*puzzle.size + math.ceil((col+1)/puzzle.size))
+                colName = "box {} contains digit {}".format(str(box), str(num))
+                colHead=root.getColByName(colName)
+                colHead.cover()
+
+
+board1 = Sudoku.Sudoku(3)
+digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
+board1.fillFromString(digitString)
+run(board1)
 
