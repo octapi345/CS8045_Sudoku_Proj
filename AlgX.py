@@ -79,6 +79,7 @@ class rowHeader:
         self.digit = digit
         self.boardSize = boardSize
         self.box = (math.floor((row-1)/boardSize)*boardSize + math.ceil(col/boardSize))
+        self.id = (row, col, digit)
 
 #generates initial 2D linked list
 def genLinkList(puzzle: Sudoku.Sudoku):
@@ -109,19 +110,21 @@ def genLinkList(puzzle: Sudoku.Sudoku):
             for col in range(1, puzzle.length+1):
                 for num in range(1, puzzle.length+1):
                     rowHead = rowHeader(row, col, num, puzzle.size)
-                    colPos = (math.floor((row-1)/puzzle.length)*puzzle.length + math.ceil(col/puzzle.length))
+                    colPos = ((row-1)*puzzle.length + col)
                     node1 = Node(root.getColHead(colPos), rowHead)
                     node1.colHead.size+=1
+                    #print(node1.colHead.name + str(num))
+                    #print(colPos)
 
-                    colPos = (math.floor((row-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
+                    colPos = ((row-1)*puzzle.length + num)+81
                     node2 = Node(root.getColHead(colPos), rowHead)
                     node2.colHead.size+=1
 
-                    colPos = (math.floor((col-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
+                    colPos = ((col-1)*puzzle.length + num)+162
                     node3 = Node(root.getColHead(colPos), rowHead)
                     node3.colHead.size+=1
 
-                    colPos = (math.floor((rowHead.box-1)/puzzle.length)*puzzle.length + math.ceil(num/puzzle.length))
+                    colPos = ((rowHead.box-1)*puzzle.length + num)+243
                     node4 = Node(root.getColHead(colPos), rowHead)
                     node4.colHead.size+=1
 
@@ -136,7 +139,9 @@ def genLinkList(puzzle: Sudoku.Sudoku):
     return root
 
 def run(puzzle: Sudoku.Sudoku):
+    #Initial board state generation
     root = genLinkList(puzzle)
+    #print(root.right.right.size)
     initialBoard = puzzle.board
     for row in range(puzzle.length):
         for col in range(puzzle.length):
@@ -161,9 +166,66 @@ def run(puzzle: Sudoku.Sudoku):
                 colHead=root.getColByName(colName)
                 colHead.cover()
 
+    solutionList= []
+    search(root, solutionList) #Run algorithm
+    #print("done")
+    #print(solutionList)
+    #modify board state
+    for val in solutionList:
+        row = val[0]
+        col = val[1]
+        digit = val [2]
+        puzzle.board[row-1][col-1]=digit
+
+
+        
+
+def search(root: Root, solutionList: list):
+    #print("start")
+    
+    if root.right is root:
+        #print(solutionList)
+        return
+    minNode = None
+    minVal = 999
+    pointer = root.right
+    while not pointer is root:
+        #print(pointer.name)
+        if pointer.size<minVal:
+            minNode=pointer
+            minVal=pointer.size
+        pointer=pointer.right
+    #print(minNode.name)
+    minNode.cover()
+    row = minNode.up
+    #print(row.rowHead.id)
+    while not row is minNode:
+        solutionList.append(row.rowHead.id)
+        #print("appended")
+        constraint=row.right
+        while not constraint is row:
+            col = constraint.colHead
+            col.cover()
+            constraint=constraint.right
+        search(root, solutionList)
+        if root.right is root:
+            #print(solutionList)
+            return
+        constraint=row.left
+        while not constraint is row:
+            col = constraint.colHead
+            col.uncover()
+            constraint=constraint.left
+        row=row.down
+        solutionList.pop
+    minNode.uncover()
+    return
+
 
 board1 = Sudoku.Sudoku(3)
 digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
 board1.fillFromString(digitString)
 run(board1)
+print(board1.toString())
+print(board1.isComplete())
 
