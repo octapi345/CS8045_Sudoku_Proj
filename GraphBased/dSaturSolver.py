@@ -26,6 +26,8 @@ def solve_sudoku_dsatur(s: Sudoku) -> tuple[bool, int]:
 
     def search() -> bool:
         nonlocal steps
+        if steps >= 1000: 
+            return False
         v = select_vertex()
         if v is None:
             return True # All cells have an assignment

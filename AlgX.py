@@ -2,7 +2,6 @@ import Sudoku
 import math
 
 
-
 class Root:
     def __init__(self):
         self.left=None
@@ -85,6 +84,8 @@ class rowHeader:
 def genLinkList(puzzle: Sudoku.Sudoku):
     root = Root()
     prev=root
+    N = puzzle.length
+    N2 = N * N
     for i in range(4): #generate constraint sets
         nameFormat = ""
         match i:
@@ -116,15 +117,15 @@ def genLinkList(puzzle: Sudoku.Sudoku):
                     #print(node1.colHead.name + str(num))
                     #print(colPos)
 
-                    colPos = ((row-1)*puzzle.length + num)+81
+                    colPos = ((row-1)*puzzle.length + num) + N2
                     node2 = Node(root.getColHead(colPos), rowHead)
                     node2.colHead.size+=1
 
-                    colPos = ((col-1)*puzzle.length + num)+162
+                    colPos = ((col-1)*puzzle.length + num) + 2*N2
                     node3 = Node(root.getColHead(colPos), rowHead)
                     node3.colHead.size+=1
 
-                    colPos = ((rowHead.box-1)*puzzle.length + num)+243
+                    colPos = ((rowHead.box-1)*puzzle.length + num) + 3*N2
                     node4 = Node(root.getColHead(colPos), rowHead)
                     node4.colHead.size+=1
 
@@ -178,8 +179,6 @@ def run(puzzle: Sudoku.Sudoku):
         puzzle.board[row-1][col-1]=digit
 
 
-        
-
 def search(root: Root, solutionList: list):
     #print("start")
     
@@ -217,15 +216,15 @@ def search(root: Root, solutionList: list):
             col.uncover()
             constraint=constraint.left
         row=row.down
-        solutionList.pop
+        solutionList.pop()   # <-- minimal fix
     minNode.uncover()
     return
 
 
-board1 = Sudoku.Sudoku(3)
-digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
-board1.fillFromString(digitString)
-run(board1)
-print(board1.toString())
-print(board1.isComplete())
-
+if __name__ == "__main__":
+    board1 = Sudoku.Sudoku(3)
+    digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
+    board1.fillFromString(digitString)
+    run(board1)
+    print(board1.toString())
+    print(board1.isComplete())
