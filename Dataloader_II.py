@@ -2,6 +2,7 @@ import csv, time, os
 from tqdm import tqdm
 from Sudoku import Sudoku
 from GraphBased.dSaturSolver import solve_sudoku_dsatur
+import SimAl
 import AlgX
 
 FILES = {
@@ -88,8 +89,27 @@ def run_batch_algx(puzzles, desc: str):
     n = len(puzzles)
     return ax_solved, ax_total, n
 
+def run_batch_simanneal(puzzles, desc: str):
+    sa_total = 0.0
+    sa_solved = 0
+    for S0 in tqdm(puzzles, desc=desc, unit="puzzle"):
+        S_sa = _clone_sudoku(S0)
+        t1 = time.perf_counter()
+
+        solver = SimAl.SimulatedAnnealing(S_sa)
+        solver.solve(display=False)
+
+        sa_total += time.perf_counter() - t1
+        if S_sa.isComplete():
+            sa_solved += 1
+    n = len(puzzles)
+    return sa_solved, sa_total, n
+
+
 if __name__ == "__main__":
     g_ds_solved = g_ax_solved = g_ds_time = g_ax_time = g_count = 0
+    g_sa_solved = g_sa_time = 0
+
 
     for fname, size in FILES.items():
         if not os.path.exists(fname):
@@ -101,19 +121,27 @@ if __name__ == "__main__":
         desc = f"Solving {fname} (n={size})"
         #ax_solved, ax_total, n = run_batch_algx(puzzles, desc)
         ds_solved, ds_total, ax_solved, ax_total, n = run_batch_two_solvers(puzzles, desc)
+        sa_solved, sa_total, _ = run_batch_simanneal(puzzles, desc + " [SA]")
+
         
         g_ds_solved += ds_solved
         g_ax_solved += ax_solved
         g_ds_time += ds_total
         g_ax_time += ax_total
+        g_sa_solved += sa_solved
+        g_sa_time += sa_total
+
         g_count += n
 
         N = size * size
         print(f"(n={size}, {N}x{N})")
         print(f"  DSatur: {ds_solved}/{n} | {ds_total:.3f}s | {ds_total/n:.4f}s avg")
         print(f"  AlgX  : {ax_solved}/{n} | {ax_total:.3f}s | {ax_total/n:.4f}s avg\n")
+        print(f"  SimAnn: {sa_solved}/{n} | {sa_total:.3f}s | {sa_total/n:.4f}s avg\n")
+
 
     if g_count:
         print("Overall:")
         print(f"  DSatur: {g_ds_solved}/{g_count} | {g_ds_time:.3f}s | {g_ds_time/g_count:.4f}s avg")
         print(f"  AlgX  : {g_ax_solved}/{g_count} | {g_ax_time:.3f}s | {g_ax_time/g_count:.4f}s avg")
+        print(f"  SimAnn: {g_sa_solved}/{g_count} | {g_sa_time:.3f}s | {g_sa_time/g_count:.4f}s avg")
