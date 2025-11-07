@@ -1,5 +1,11 @@
 import Sudoku
 import math
+global operations
+global covers
+global uncovers
+operations=0
+covers=0
+uncovers=0
 
 
 class Root:
@@ -34,22 +40,34 @@ class ColumnHeader:
             last=last.down
         return last
     def cover(self):
+        global operations
+        global covers
+        covers+=1
+        operations+=3
         self.left.right=self.right
         self.right.left=self.left
         row=self.down
         while not row is self:
+            operations+=2
             i = row.right
             while not i is row:
+                operations+=4
                 i.up.down=i.down
                 i.down.up=i.up
                 i.colHead.size-=1
                 i=i.right
             row=row.down
     def uncover(self):
+        global operations
+        global uncovers
+        uncovers+=1
+        operations+=3
         row=self.up
         while not row is self:
+            operations+=2
             i = row.left
             while not i is row:
+                operations+=4
                 i.colHead.size+=1
                 i.up.down=i
                 i.down.up=i
@@ -140,6 +158,7 @@ def genLinkList(puzzle: Sudoku.Sudoku):
     return root
 
 def run(puzzle: Sudoku.Sudoku):
+    global operations
     #Initial board state generation
     root = genLinkList(puzzle)
     #print(root.right.right.size)
@@ -152,20 +171,24 @@ def run(puzzle: Sudoku.Sudoku):
                 #print(colName)
                 colHead=root.getColByName(colName)
                 #print(colHead.name)
-                colHead.cover()
+                if not colHead is root:
+                    colHead.cover()
 
                 colName = "row {} contains digit {}".format(str(row+1), str(num))
                 colHead=root.getColByName(colName)
-                colHead.cover()
+                if not colHead is root:
+                    colHead.cover()
 
                 colName = "col {} contains digit {}".format(str(col+1), str(num))
                 colHead=root.getColByName(colName)
-                colHead.cover()
+                if not colHead is root:
+                    colHead.cover()
 
                 box = (math.floor((row)/puzzle.size)*puzzle.size + math.ceil((col+1)/puzzle.size))
                 colName = "box {} contains digit {}".format(str(box), str(num))
                 colHead=root.getColByName(colName)
-                colHead.cover()
+                if not colHead is root:
+                    colHead.cover()
 
     solutionList= []
     search(root, solutionList) #Run algorithm
@@ -173,58 +196,73 @@ def run(puzzle: Sudoku.Sudoku):
     #print(solutionList)
     #modify board state
     for val in solutionList:
+        operations+=4
         row = val[0]
         col = val[1]
         digit = val [2]
         puzzle.board[row-1][col-1]=digit
+    if not puzzle.isComplete:
+        print("No solution found")
 
 
 def search(root: Root, solutionList: list):
+    global operations
     #print("start")
-    
     if root.right is root:
-        #print(solutionList)
         return
+    
+    #choose column
     minNode = None
     minVal = 999
     pointer = root.right
     while not pointer is root:
-        #print(pointer.name)
+        operations+=2
         if pointer.size<minVal:
             minNode=pointer
             minVal=pointer.size
         pointer=pointer.right
-    #print(minNode.name)
+    if minVal==0:
+        return
     minNode.cover()
     row = minNode.up
-    #print(row.rowHead.id)
+    
+    #choose row
     while not row is minNode:
+        operations+=2
         solutionList.append(row.rowHead.id)
-        #print("appended")
         constraint=row.right
+        #print(row.rowHead.id)
         while not constraint is row:
+            operations+=2
             col = constraint.colHead
             col.cover()
             constraint=constraint.right
-        search(root, solutionList)
+        search(root, solutionList) #recursive call
+
+        #solution found
         if root.right is root:
-            #print(solutionList)
             return
+        
+        #no solution found using row selection
         constraint=row.left
         while not constraint is row:
+            operations+=2
             col = constraint.colHead
             col.uncover()
             constraint=constraint.left
         row=row.down
         solutionList.pop()   # <-- minimal fix
     minNode.uncover()
-    return
+    return #all possibilities tried for column selection
 
 
 if __name__ == "__main__":
     board1 = Sudoku.Sudoku(3)
-    digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
+    #digitString = "070000043040009610800634900094052000358460020000800530080070091902100005007040802"
+    digitString ="090000000000000000000000000000000000100000000000000009000000000000000000009000000"
     board1.fillFromString(digitString)
     run(board1)
     print(board1.toString())
-    print(board1.isComplete())
+    print("num operations: "+str(operations))
+    print("num covers: "+str(covers))
+    print("num uncovers: "+str(uncovers))

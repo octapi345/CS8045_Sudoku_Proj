@@ -75,6 +75,19 @@ def run_batch_two_solvers(puzzles, desc: str):
     n = len(puzzles)
     return ds_solved, ds_total, ax_solved, ax_total, n
 
+def run_batch_algx(puzzles, desc: str):
+    ax_total = 0.0
+    ax_solved = 0
+    for S0 in tqdm(puzzles, desc=desc, unit="puzzle"):
+        S_ax = _clone_sudoku(S0)
+        t1 = time.perf_counter()
+        AlgX.run(S_ax)
+        ax_total += time.perf_counter() - t1
+        if S_ax.isComplete():
+            ax_solved += 1
+    n = len(puzzles)
+    return ax_solved, ax_total, n
+
 if __name__ == "__main__":
     g_ds_solved = g_ax_solved = g_ds_time = g_ax_time = g_count = 0
 
@@ -86,8 +99,9 @@ if __name__ == "__main__":
         print(f"{fname}: loaded {len(puzzles)} puzzles (skipped {bad})")
 
         desc = f"Solving {fname} (n={size})"
+        #ax_solved, ax_total, n = run_batch_algx(puzzles, desc)
         ds_solved, ds_total, ax_solved, ax_total, n = run_batch_two_solvers(puzzles, desc)
-
+        
         g_ds_solved += ds_solved
         g_ax_solved += ax_solved
         g_ds_time += ds_total

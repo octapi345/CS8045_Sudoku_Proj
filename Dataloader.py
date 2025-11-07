@@ -5,6 +5,7 @@ Dataset From: https://www.kaggle.com/datasets/rohanrao/sudoku?resource=download
 from Sudoku import Sudoku
 import csv, time
 from GraphBased.dSaturSolver import solve_sudoku_dsatur
+import AlgX
 
 def make_dataset(csv_path, limit = None):
     pairs = []

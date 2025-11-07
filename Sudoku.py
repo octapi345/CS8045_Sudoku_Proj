@@ -4,6 +4,8 @@ class Sudoku:
         self.length = size*size
         self.board = [[0]*self.length for _ in range(self.length)] 
         self.fixed = [[False]*self.length for _ in range(self.length)]
+        self.operations = 0
+        self.isValidRuns = 0
     
     def fillFromString(self, digitString): #only works with size 3 or less. done with digits. zero is empty
         digitArr = [int(char) for char in digitString] 
@@ -63,10 +65,12 @@ class Sudoku:
         return True
 
     def isValid(self): #checks if the sudoku has any illegal number placements. ignores empty cells
+        self.isValidRuns+=1
         for i in range(self.length): #checks rows
             contains = [False]*(self.length+1)
-
+            
             for j in range(self.length):
+                self.operations+=4
                 num = self.board[i][j]
                 if num!=0 and contains[num]:
                     return False
@@ -77,6 +81,7 @@ class Sudoku:
             contains = [False]*(self.length+1)
 
             for j in range(self.length):
+                self.operations+=4
                 num = self.board[j][i]
                 if num!=0 and contains[num]:
                     return False
@@ -89,6 +94,7 @@ class Sudoku:
 
                 for k in range(self.size):
                     for m in range(self.size):
+                        self.operations+=4
                         num = self.board[(i*self.size)+k][(j*self.size)+m]
                         if num!=0 and contains[num]:
                             return False
