@@ -37,6 +37,9 @@ class SimulatedAnnealing:
         self.decay = decay
         self.N_plateau = max_plateau
         self.max_reheats = max_reheats
+        
+        if self.n>4:
+            self.N_plateau *= self.n
 
         # Tracking variables
         self.iters = 0
