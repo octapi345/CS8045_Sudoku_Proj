@@ -193,11 +193,11 @@ class SimulatedAnnealing:
                 self.iters_since_improvement += 1
 
             # Apply local brute force if very few conflicts
-            if self.error_count <= 4 and not self.tried_BF:
+            if self.error_count <= 4 and self.n>3 and not self.tried_BF:
                 improved = self.simple_brute_force()
                 self.tried_BF = True
                 if improved and self.error_count == 0:
-                    print("[Simple brute force] Solution found!")
+                    #print("[Simple brute force] Solution found!")
                     break
 
             # Plateau: reheat + focused perturbation
