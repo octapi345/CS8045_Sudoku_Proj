@@ -5,9 +5,10 @@ import math, random
 all_digits = {
     2: list(range(1, 5)),
     3: list(range(1, 10)),
-    4: [str(x) for x in list(range(1, 10)) + list("ABCDEFG")],
-    5: [str(x) for x in list(range(1, 10)) + list("ABCDEFGHIJKLMNO")]
+    4: list(range(1, 17)),   # 1–16 (instead of 1–9 + A–G)
+    5: list(range(1, 26))    # 1–25 (instead of 1–9 + A–O)
 }
+
 
 def available_numbers(n, taken):
     """Return remaining numbers available given filled cells."""
@@ -20,11 +21,25 @@ def available_numbers(n, taken):
     result = np.array([val for val, cnt in remainCount.items() for _ in range(cnt)])
     return result
 
+def _to_int(val):
+    if isinstance(val, (int, np.integer)):
+        return int(val)
+    if isinstance(val, str):
+        val = val.strip().upper()
+        if not val or val in {'0', '.'}:
+            return 0
+        if val.isdigit():
+            return int(val)
+        if 'A' <= val <= 'Z':
+            return 10 + (ord(val) - ord('A'))
+    raise ValueError(f"Bad symbol '{val}'")
+
 
 class SimulatedAnnealing:
     def __init__(self, sudoku_init, t_sched=None, t_init=10):
         self.sudoku = sudoku_init
         self.grid = np.array(sudoku_init.board)
+        self.grid = np.vectorize(_to_int)(self.grid)
         self.fixed = np.array(sudoku_init.fixed)
         self.length = sudoku_init.length  # total grid size (e.g., 9, 16, 25)
         self.n = int(math.sqrt(self.length))  # subgrid dimension (3, 4, 5)
@@ -43,6 +58,10 @@ class SimulatedAnnealing:
         self.num_badswaps = 0
         self.num_rejectedswaps = 0
         
+        self.plateau_count = 0          # count iterations without improvement
+        self.N_plateau = 20000          # iterations before reheat
+        self.reheat_factor = 4.5        # multiplier for reheating
+        
     def populate(self):
         """Fill each subgrid with random non-fixed values."""
         for box_row in range(self.n):
@@ -56,9 +75,11 @@ class SimulatedAnnealing:
                     for c in range(self.n * box_col, self.n * box_col + self.n):
                         if not self.fixed[r][c]:
                             self.grid[r][c] = numbers.pop()
-                        
+                    
+
+
+    # Modify swap() to track plateau and reheating
     def swap(self):
-        """Swap two unfixed cells in a random subgrid and apply simulated annealing acceptance."""
         box = random.randint(0, self.n**2 - 1)
         row_start, col_start = self.n * (box // self.n), self.n * (box % self.n)
         candidates = [
@@ -71,27 +92,42 @@ class SimulatedAnnealing:
             return self.swap()
         (r1, c1), (r2, c2) = random.sample(candidates, 2)
         self.grid[r1][c1], self.grid[r2][c2] = self.grid[r2][c2], self.grid[r1][c1]
-        
+
         currErr = self.error_count
         newErr = self.sudoku.numErrors(grid=self.grid.tolist())
         delta = newErr - currErr
-        
+
+        improved = False
         if delta < 0:
             self.sudoku.board = self.grid.tolist()
             self.error_count = newErr
             self.num_goodswaps += 1
+            improved = True
         else:
             prob = math.exp(-delta / self.T)
             if random.random() < prob:
                 self.sudoku.board = self.grid.tolist()
                 self.error_count = newErr
                 self.num_badswaps += 1
+                improved = True
             else:
                 self.grid[r1][c1], self.grid[r2][c2] = self.grid[r2][c2], self.grid[r1][c1]
                 self.num_rejectedswaps += 1
-        
+
+        # --- Plateau tracking ---
+        if improved:
+            self.plateau_count = 0
+        else:
+            self.plateau_count += 1
+            if self.plateau_count >= self.N_plateau:
+                self.T *= self.reheat_factor
+                self.plateau_count = 0
+                print(f"[Iteration {self.iters}] Reheat! Temp = {self.T:.3f}, Errors = {self.error_count}")
+
+        # --- Update counters and temperature ---
         self.iters += 1
-        self.T *= self.decay
+        self.T = self.T_init / math.log(1 + self.iters)
+
 
     def solve(self, display=False):
         while self.error_count > 0:
