@@ -70,14 +70,22 @@ class SimulatedAnnealing:
                     self.grid[r, c] = val
 
     def compute_total_errors(self):
-        """Count duplicates in rows and columns only (boxes are correct)."""
+        """Count total number of conflicting cells in rows and columns."""
         errors = 0
         for i in range(self.length):
             row = self.grid[i, :]
             col = self.grid[:, i]
-            errors += len(row) - len(np.unique(row))
-            errors += len(col) - len(np.unique(col))
+
+            # Count row conflicts
+            _, row_counts = np.unique(row, return_counts=True)
+            errors += np.sum(row_counts[row_counts > 1])
+
+            # Count column conflicts
+            _, col_counts = np.unique(col, return_counts=True)
+            errors += np.sum(col_counts[col_counts > 1])
+
         return errors
+
 
     def compute_delta_errors(self, r1, c1, r2, c2):
         """Compute delta errors only for affected rows/columns after swapping two cells."""
@@ -87,11 +95,11 @@ class SimulatedAnnealing:
         # Count errors before swap
         before = 0
         for r in rows:
-            row_vals = self.grid[r, :]
-            before += len(row_vals) - len(np.unique(row_vals))
+            vals, counts = np.unique(self.grid[r, :], return_counts=True)
+            before += np.sum(counts[counts > 1])
         for c in cols:
-            col_vals = self.grid[:, c]
-            before += len(col_vals) - len(np.unique(col_vals))
+            vals, counts = np.unique(self.grid[:, c], return_counts=True)
+            before += np.sum(counts[counts > 1])
 
         # Swap
         self.grid[r1, c1], self.grid[r2, c2] = self.grid[r2, c2], self.grid[r1, c1]
@@ -99,16 +107,17 @@ class SimulatedAnnealing:
         # Count errors after swap
         after = 0
         for r in rows:
-            row_vals = self.grid[r, :]
-            after += len(row_vals) - len(np.unique(row_vals))
+            vals, counts = np.unique(self.grid[r, :], return_counts=True)
+            after += np.sum(counts[counts > 1])
         for c in cols:
-            col_vals = self.grid[:, c]
-            after += len(col_vals) - len(np.unique(col_vals))
+            vals, counts = np.unique(self.grid[:, c], return_counts=True)
+            after += np.sum(counts[counts > 1])
 
         # Swap back
         self.grid[r1, c1], self.grid[r2, c2] = self.grid[r2, c2], self.grid[r1, c1]
 
         return after - before
+
 
 
     def swap(self):
@@ -179,7 +188,7 @@ class SimulatedAnnealing:
 
         return False
 
-    def solve(self, display=False, max_iters=5*(10**6)):
+    def solve(self, display=False, max_iters=20*(10**6)):
         min_T = 0.01
 
         while self.error_count > 0 and self.iters < max_iters:
@@ -197,12 +206,15 @@ class SimulatedAnnealing:
                 improved = self.simple_brute_force()
                 self.tried_BF = True
                 if improved and self.error_count == 0:
+                    
                     #print("[Simple brute force] Solution found!")
                     break
 
             # Plateau: reheat + focused perturbation
             if self.iters_since_improvement >= self.N_plateau and self.reheats < self.max_reheats:
                 self.T = max(0.4, self.T * 1.5)
+                if self.n > 4:
+                    self.T *= 1.5
                 self.reheats += 1
                 if display:
                     print(f"[Reheat {self.reheats}] Temp reset to {self.T:.4f}, Errors={self.error_count}")
