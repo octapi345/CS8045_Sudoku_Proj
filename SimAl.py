@@ -212,9 +212,7 @@ class SimulatedAnnealing:
 
             # Plateau: reheat + focused perturbation
             if self.iters_since_improvement >= self.N_plateau and self.reheats < self.max_reheats:
-                self.T = max(0.4, self.T * 1.5)
-                if self.n > 4:
-                    self.T *= 1.5
+                self.T = max(0.6, self.T * 1.5)
                 self.reheats += 1
                 if display:
                     print(f"[Reheat {self.reheats}] Temp reset to {self.T:.4f}, Errors={self.error_count}")
