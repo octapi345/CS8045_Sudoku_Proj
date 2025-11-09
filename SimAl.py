@@ -188,7 +188,7 @@ class SimulatedAnnealing:
 
         return False
 
-    def solve(self, display=False, max_iters=20*(10**6)):
+    def solve(self, display=False, max_iters=8*(10**6)):
         min_T = 0.01
 
         while self.error_count > 0 and self.iters < max_iters:
