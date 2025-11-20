@@ -1,3 +1,7 @@
+'''
+Dataset From: https://www.kaggle.com/datasets/rohanrao/sudoku?resource=download
+'''
+
 import csv, time, os
 from tqdm import tqdm
 from Sudoku import Sudoku
@@ -14,42 +18,32 @@ FILES = {
 LIMIT = None
 
 def _char_to_val(ch: str) -> int:
-    ch = ch.strip()
-    if not ch or ch in {'0', '.'}:
+    if ch == '0':
         return 0
     if ch.isdigit():
         return int(ch)
-    u = ch.upper()
-    if 'A' <= u <= 'Z':
-        return 10 + (ord(u) - ord('A'))
-    raise ValueError(f"Bad symbol '{ch}'")
+    return 10 + (ord(ch) - ord('A'))
 
 def _load_into_sudoku(s: Sudoku, raw: str) -> None:
-    N = s.length
-    if len(raw) != N * N:
-        raise ValueError(f"Expected {N*N} chars, got {len(raw)}")
     p = 0
-    for i in range(N):
-        for j in range(N):
+    for i in range(s.length):
+        for j in range(s.length):
             v = _char_to_val(raw[p])
             s.board[i][j] = v
             s.fixed[i][j] = (v != 0)
             p += 1
 
 def load_puzzles(csv_path: str, size: int, limit: int | None):
-    puzzles, bad = [], 0
+    puzzles = []
     with open(csv_path, newline='') as f:
         reader = csv.DictReader(f)
         for idx, row in enumerate(reader):
             if limit and idx >= limit:
                 break
-            try:
-                s = Sudoku(size)
-                _load_into_sudoku(s, row["puzzle"].strip())
-                puzzles.append(s)
-            except Exception:
-                bad += 1
-    return puzzles, bad
+            s = Sudoku(size)
+            _load_into_sudoku(s, row["puzzle"])
+            puzzles.append(s)
+    return puzzles
 
 def _clone_sudoku(s: Sudoku) -> Sudoku:
     c = Sudoku(s.size)
@@ -115,8 +109,8 @@ if __name__ == "__main__":
         if not os.path.exists(fname):
             print(f"Skipping {fname} (not found)")
             continue
-        puzzles, bad = load_puzzles(fname, size, LIMIT)
-        print(f"{fname}: loaded {len(puzzles)} puzzles (skipped {bad})")
+        puzzles = load_puzzles(fname, size, LIMIT)
+        print(f"{fname}: loaded {len(puzzles)} puzzles")
 
         desc = f"Solving {fname} (n={size})"
         #ax_solved, ax_total, n = run_batch_algx(puzzles, desc)

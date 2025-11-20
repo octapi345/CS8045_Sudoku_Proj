@@ -2,25 +2,16 @@ import numpy as np
 import math, random
 from itertools import permutations
 
-all_digits = {
-    2: list(range(1, 5)),
-    3: list(range(1, 10)),
-    4: list(range(1, 17)),
-    5: list(range(1, 26))
-}
-
 def _to_int(val):
-    if isinstance(val, (int, np.integer)):
-        return int(val)
+    if isinstance(val, int):
+        return val
+    if val == 0:
+        return 0
     if isinstance(val, str):
-        val = val.strip().upper()
-        if not val or val in {'0', '.'}:
-            return 0
         if val.isdigit():
             return int(val)
-        if 'A' <= val <= 'Z':
-            return 10 + (ord(val) - ord('A'))
-    raise ValueError(f"Bad symbol '{val}'")
+        return 10 + (ord(val) - ord('A'))
+    return int(val)
 
 class SimulatedAnnealing:
     def __init__(self, sudoku_init, t_init=5.0, decay=0.99995, max_plateau=35000, max_reheats=2000):
